@@ -17,22 +17,34 @@ var Usuario = require('../models/usuario');
 */
 
 app.get('/', (req, res, next) => {
-    Usuario.find({}, 'nombre email img role').exec(
-        (err, usuarios) => {
-            if (err) {
-                return res.status(500).json({
-                    ok: false,
-                    mensaje: 'Error cargando usuarios',
-                    errors: err
+
+    var desde = req.query.desde || 0;
+    desde = Number(desde);
+
+
+    Usuario.find({}, 'nombre email img role')
+        .skip(desde)
+        .limit(5)
+        .exec(
+            (err, usuarios) => {
+                if (err) {
+                    return res.status(500).json({
+                        ok: false,
+                        mensaje: 'Error cargando usuarios',
+                        errors: err
+                    });
+                }
+
+                Usuario.count({}, (err, conteo) => {
+                    res.status(200).json({
+                        ok: true,
+                        usuarios: usuarios,
+                        total: conteo
+                    });
                 });
-            }
 
 
-            res.status(200).json({
-                ok: true,
-                usuarios: usuarios
             });
-        });
 
 
 });
@@ -60,7 +72,7 @@ app.put('/:id', mdAutenticacion.verificaToken, (req, res) => {
         if (!usuario) {
             return res.status(400).json({
                 ok: false,
-                mensaje: 'Error al buscar usuario, usuario con id ' + ' no existe',
+                mensaje: 'Error al buscar usuario, usuario con id ' + id + ' no existe',
                 errors: { message: 'No exite un usuario con ese ID' }
             });
         }
